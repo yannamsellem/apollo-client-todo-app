@@ -1,0 +1,32 @@
+schema: http://localhost:4000/graphql
+documents:
+  - 'src/**/!(*.d).{ts,tsx}'
+  - '!*.graphql.ts'
+  - '!globalTypes.ts'
+config:
+  preResolveTypes: true
+  namingConvention: keep
+  avoidOptionals:
+    field: true
+  nonOptionalTypename: true
+  skipTypeNameForRoot: true
+  scalars:
+    Date: string
+generates:
+  ./src/__generated__/globalTypes.ts:
+    hooks:
+      afterOneFileWrite:
+        - npx prettier --write
+    plugins:
+      - typescript
+  ./src/:
+    hooks:
+      afterOneFileWrite:
+        - npx prettier --write
+    preset: near-operation-file
+    presetConfig:
+      extension: '.graphql.ts'
+      baseTypesPath: './__generated__/globalTypes.ts'
+      folder: __generated__
+    plugins:
+      - typescript-operations
