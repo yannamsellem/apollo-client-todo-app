@@ -1,7 +1,12 @@
 import { gql, useQuery } from '@apollo/client'
-import * as GetTodosQueryTypes from './__generated__/todos.graphql'
+import { TODO_FRAGMENT } from '../fragments/todo'
+import {
+  GetTodosQuery,
+  GetTodosQueryVariables,
+} from './__generated__/todos.graphql'
 
 export const GET_TODOS = gql`
+  ${TODO_FRAGMENT}
   query GetTodos($first: Int!, $after: String) {
     todos(first: $first, after: $after) {
       pageInfo {
@@ -11,28 +16,21 @@ export const GET_TODOS = gql`
       edges {
         cursor
         node {
-          id
-          text
-          completed
-          createdAt
+          ...TodoFragment
         }
       }
     }
   }
 `
 
-export function useGetTodos(
-  variables: GetTodosQueryTypes.GetTodosQueryVariables,
-) {
+export function useGetTodosQuery(variables: GetTodosQueryVariables) {
   const {
     data,
     loading,
     error,
     fetchMore: more,
-  } = useQuery<
-    GetTodosQueryTypes.GetTodosQuery,
-    GetTodosQueryTypes.GetTodosQueryVariables
-  >(GET_TODOS, { variables })
+    ...rest
+  } = useQuery<GetTodosQuery, GetTodosQueryVariables>(GET_TODOS, { variables })
 
   function fetchMore() {
     if (!loading) return null
@@ -42,5 +40,7 @@ export function useGetTodos(
     return more({ variables: { ...variables, after } })
   }
 
-  return { data, loading, error, fetchMore }
+  const todos = data?.todos?.edges?.map(e => e.node)
+
+  return { todos, loading, error, fetchMore, ...rest }
 }
